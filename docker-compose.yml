@@ -1,0 +1,49 @@
+version: "3"
+
+services:
+  postgresql:
+    image: postgres:9.4
+    container_name: postgresql
+    volumes:
+      - ./docker/taigaDb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "5432:5432"
+    networks:
+      network:
+        ipv4_address: 172.16.1.1
+
+  taiga-back:
+    image: keyrus/taiga-back
+    build:
+      context: ./docker/taigaBack
+    container_name: taiga-back
+    depends_on:
+      - postgresql
+    ports:
+      - "8000:8000"
+    networks:
+      network:
+        ipv4_address: 172.16.1.2
+
+  taiga-front:
+    image: keyrus/taiga-front
+    build:
+      context: ./docker/taigaFront
+    container_name: taiga-front
+    depends_on:
+      - taiga-back
+    ports:
+      - "80:80"
+    networks:
+      network:
+        ipv4_address: 172.16.1.3
+
+networks:
+  network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.1.0/16
